@@ -60,7 +60,7 @@ public abstract class HttpAuthenticationService extends BaseAuthenticationServic
         connection.setDoOutput(true);
         connection.setRequestMethod("POST");
 
-        LOGGER.debug(new StringBuilder().append("Writing POST data to ").append(url).append(": ").append(post).toString());
+        LOGGER.info(new StringBuilder().append("Writing POST data to ").append(url).append(": ").append(post).toString());
 
         OutputStream outputStream = null;
         try {
@@ -70,27 +70,27 @@ public abstract class HttpAuthenticationService extends BaseAuthenticationServic
             IOUtils.closeQuietly(outputStream);
         }
 
-        LOGGER.debug(new StringBuilder().append("Reading data from ").append(url).toString());
+        LOGGER.info(new StringBuilder().append("Reading data from ").append(url).toString());
 
         InputStream inputStream = null;
         try {
             inputStream = connection.getInputStream();
             String result = IOUtils.toString(inputStream, Charsets.UTF_8);
-            LOGGER.debug(new StringBuilder().append("Successful read, server response was ").append(connection.getResponseCode()).toString());
-            LOGGER.debug(new StringBuilder().append("Response: ").append(result).toString());
+            LOGGER.info(new StringBuilder().append("Successful read, server response was ").append(connection.getResponseCode()).toString());
+            LOGGER.info(new StringBuilder().append("Response: ").append(result).toString());
             return result;
         } catch (IOException e) {
             IOUtils.closeQuietly(inputStream);
             inputStream = connection.getErrorStream();
 
             if (inputStream != null) {
-                LOGGER.debug(new StringBuilder().append("Reading error page from ").append(url).toString());
+                LOGGER.info(new StringBuilder().append("Reading error page from ").append(url).toString());
                 String result = IOUtils.toString(inputStream, Charsets.UTF_8);
-                LOGGER.debug(new StringBuilder().append("Successful read, server response was ").append(connection.getResponseCode()).toString());
-                LOGGER.debug(new StringBuilder().append("Response: ").append(result).toString());
+                LOGGER.info(new StringBuilder().append("Successful read, server response was ").append(connection.getResponseCode()).toString());
+                LOGGER.info(new StringBuilder().append("Response: ").append(result).toString());
                 return result;
             }
-            LOGGER.debug("Request failed", e);
+            LOGGER.info("Request failed", e);
             throw e;
         }
         finally {

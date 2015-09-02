@@ -47,15 +47,9 @@ public class YggdrasilMinecraftSessionService
     private static final URL CHECK_URL = HttpAuthenticationService.constantURL("http://localhost/minecraft/session/hasJoined");
     private final PublicKey publicKey;
     private final Gson gson = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).create();
-    private final LoadingCache<GameProfile, GameProfile> insecureProfiles = CacheBuilder.newBuilder().expireAfterWrite(6L, TimeUnit.HOURS).build(new CacheLoader() {
-        public GameProfile load(GameProfile key)
-                throws Exception {
+    private final LoadingCache<GameProfile, GameProfile> insecureProfiles = (LoadingCache<GameProfile, GameProfile>)CacheBuilder.newBuilder().expireAfterWrite(6L, TimeUnit.HOURS).build((CacheLoader)new CacheLoader<GameProfile, GameProfile>() {
+        public GameProfile load(final GameProfile key) throws Exception {
             return YggdrasilMinecraftSessionService.this.fillGameProfile(key, false);
-        }
-
-        @Override
-        public Object load(Object o) throws Exception {
-            return null;
         }
     });
 
@@ -112,11 +106,11 @@ public class YggdrasilMinecraftSessionService
         }
         if (requireSecure) {
             if (!textureProperty.hasSignature()) {
-                LOGGER.error("Signature is missing from textures payload");
+                LOGGER.debug("Signature is missing from textures payload");
                 throw new InsecureTextureException("Signature is missing from textures payload");
             }
             if (!textureProperty.isSignatureValid(this.publicKey)) {
-                LOGGER.error("Textures payload has been tampered with (signature invalid)");
+                LOGGER.debug("Textures payload has been tampered with (signature invalid)");
                 throw new InsecureTextureException("Textures payload has been tampered with (signature invalid)");
             }
         }
@@ -125,7 +119,7 @@ public class YggdrasilMinecraftSessionService
             String json = new String(Base64.decodeBase64(textureProperty.getValue()), Charsets.UTF_8);
             result = (MinecraftTexturesPayload) this.gson.fromJson(json, MinecraftTexturesPayload.class);
         } catch (JsonParseException e) {
-            LOGGER.error("Could not decode textures payload", e);
+            LOGGER.debug("Could not decode textures payload", e);
             return new HashMap();
         }
         if (result.getTextures() == null) {
@@ -133,7 +127,7 @@ public class YggdrasilMinecraftSessionService
         }
         for (Map.Entry<MinecraftProfileTexture.Type, MinecraftProfileTexture> entry : result.getTextures().entrySet()) {
             if (!isWhitelistedDomain(((MinecraftProfileTexture) entry.getValue()).getUrl())) {
-                LOGGER.error("Textures payload has been tampered with (non-whitelisted domain)");
+                LOGGER.debug("Textures payload has been tampered with (non-whitelisted domain)");
                 return new HashMap();
             }
         }
@@ -165,7 +159,7 @@ public class YggdrasilMinecraftSessionService
             LOGGER.debug("Successfully fetched profile properties for " + profile);
             return result;
         } catch (AuthenticationException e) {
-            LOGGER.warn("Couldn't look up profile properties for " + profile, e);
+            LOGGER.debug("Couldn't look up profile properties for " + profile, e);
         }
         return profile;
     }
